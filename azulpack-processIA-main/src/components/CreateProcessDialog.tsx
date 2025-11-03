@@ -108,7 +108,7 @@ const CreateProcessDialog = ({ onProcessCreated, processo, open, onOpenChange }:
             const formDataUpload = new FormData();
             formDataUpload.append('file', file);
             formDataUpload.append('processo_id', processoId.toString());
-            const response = await fetch('https://webhookauto.iainfinity.com.br/webhook/gps-file', {
+            const response = await fetch('https://webhookauto.iainfinity.com.br/webhook/azulpack_file', {
               method: 'POST',
               body: formDataUpload,
             });
