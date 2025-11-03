@@ -383,7 +383,7 @@ const DefenseEditChat = ({ open, onOpenChange, processo, onDefenseUpdated }: Def
 
 
       // Envia para o webhook
-      const response = await fetch('https://webhookauto.iainfinity.com.br/webhook/gps-chat-ia', {
+      const response = await fetch('https://webhookauto.iainfinity.com.br/webhook/azulpack_chat_ia', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(webhookPayload),

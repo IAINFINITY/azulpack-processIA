@@ -119,7 +119,7 @@ const DefenseAnalyzer = ({ processo }: DefenseAnalyzerProps) => {
 
       console.log("Enviando requisição para análise:", webhookData);
 
-      const response = await fetch('https://webhookauto.iainfinity.com.br/webhook/gps-chat-ia', {
+      const response = await fetch('https://webhookauto.iainfinity.com.br/webhook/azulpack_chat_ia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

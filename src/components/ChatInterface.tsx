@@ -116,7 +116,7 @@ const ChatInterface = ({
       console.log("Enviando para webhook n8n:", webhookPayload);
 
       // Enviar para o webhook
-      const response = await fetch('https://webhookauto.iainfinity.com.br/webhook/gps-chat-ia', {
+      const response = await fetch('https://webhookauto.iainfinity.com.br/webhook/azulpack_chat_ia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
