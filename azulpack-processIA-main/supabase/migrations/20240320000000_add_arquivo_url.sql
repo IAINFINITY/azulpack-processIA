@@ -1,0 +1,1 @@
+ALTER TABLE processos ADD COLUMN arquivo_url TEXT; 
