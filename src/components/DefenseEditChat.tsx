@@ -428,12 +428,15 @@ const DefenseEditChat = ({ open, onOpenChange, processo, onDefenseUpdated }: Def
       console.log("Response data is array:", Array.isArray(responseData));
 
       // Recebe resposta da IA
+      let allAiContent: string[] = [];
+      
       if (Array.isArray(responseData) && responseData.length > 0) {
         responseData.forEach((item, index) => {
           const content = item.message || item.text || item.resposta || item.content || 
                          (typeof item === 'string' ? item : JSON.stringify(item));
           
           if (content && content.trim().length > 0 && content !== 'undefined' && content !== 'null') {
+            allAiContent.push(content);
             const aiMessage: ChatMessage = {
               id: `${Date.now()}_${index}`,
               type: 'ai',
@@ -449,6 +452,7 @@ const DefenseEditChat = ({ open, onOpenChange, processo, onDefenseUpdated }: Def
                        responseData.content || JSON.stringify(responseData);
         
         if (content && content.trim().length > 0 && content !== 'undefined' && content !== 'null') {
+          allAiContent.push(content);
           const aiMessage: ChatMessage = {
             id: `${Date.now()}_0`,
             type: 'ai',
@@ -459,6 +463,7 @@ const DefenseEditChat = ({ open, onOpenChange, processo, onDefenseUpdated }: Def
         }
       } else if (typeof responseData === 'string' && responseData.trim().length > 0) {
         // Resposta direta como string
+        allAiContent.push(responseData);
         const aiMessage: ChatMessage = {
           id: `${Date.now()}_0`,
           type: 'ai',
@@ -466,6 +471,12 @@ const DefenseEditChat = ({ open, onOpenChange, processo, onDefenseUpdated }: Def
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, aiMessage]);
+      }
+      
+      // Atualizar latestDefense com o conteúdo da resposta da IA
+      if (allAiContent.length > 0) {
+        const newDefenseContent = allAiContent.join('\n\n').trim();
+        setLatestDefense(newDefenseContent);
       }
 
     } catch (error: any) {
@@ -482,6 +493,33 @@ const DefenseEditChat = ({ open, onOpenChange, processo, onDefenseUpdated }: Def
 
 
 
+  const saveToHistory = async (defenseText: string) => {
+    if (!user) return;
+
+    try {
+      const { data: nextVersionData } = await supabase
+        .rpc('get_next_defense_version', { p_processo_id: processo.id });
+
+      const { error } = await supabase
+        .from('defesa_historico')
+        .insert([{
+          processo_id: processo.id,
+          user_id: user.id,
+          conteudo: defenseText,
+          versao: nextVersionData || 1,
+        }]);
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error("Erro ao salvar no histórico:", error);
+      toast({
+        title: "Erro ao salvar no histórico",
+        description: error.message || "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRegisterDefense = async () => {
     setSaving(true);
     try {
@@ -491,6 +529,9 @@ const DefenseEditChat = ({ open, onOpenChange, processo, onDefenseUpdated }: Def
         .eq('id', processo.id);
 
       if (error) throw error;
+
+      // Salvar no histórico antes de atualizar
+      await saveToHistory(latestDefense);
 
       onDefenseUpdated(latestDefense);
       onOpenChange(false);
