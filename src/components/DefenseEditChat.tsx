@@ -389,19 +389,83 @@ const DefenseEditChat = ({ open, onOpenChange, processo, onDefenseUpdated }: Def
         body: JSON.stringify(webhookPayload),
       });
 
-      const responseData = await response.json();
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Erro na resposta do webhook:", errorText);
+        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
+      }
+
+      // Verificar se a resposta é JSON válido
+      const contentType = response.headers.get("content-type");
+      console.log("Content-Type da resposta:", contentType);
+      
+      // Ler o body da resposta apenas uma vez
+      const responseText = await response.text();
+      console.log("Response text (raw):", responseText);
+      
+      if (!responseText || responseText.trim().length === 0) {
+        throw new Error("Resposta do webhook está vazia");
+      }
+      
+      let responseData;
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          responseData = JSON.parse(responseText);
+        } catch (parseError: any) {
+          console.error("Erro ao fazer parse do JSON:", parseError);
+          console.error("Texto que causou erro:", responseText);
+          throw new Error(`Resposta do webhook não é um JSON válido: ${parseError.message}`);
+        }
+      } else {
+        // Se não for JSON, usar como texto direto
+        responseData = responseText;
+      }
+      
+      console.log("Response data:", responseData);
+      console.log("Response data type:", typeof responseData);
+      console.log("Response data is array:", Array.isArray(responseData));
 
       // Recebe resposta da IA
       if (Array.isArray(responseData) && responseData.length > 0) {
         responseData.forEach((item, index) => {
+          const content = item.message || item.text || item.resposta || item.content || 
+                         (typeof item === 'string' ? item : JSON.stringify(item));
+          
+          if (content && content.trim().length > 0 && content !== 'undefined' && content !== 'null') {
+            const aiMessage: ChatMessage = {
+              id: `${Date.now()}_${index}`,
+              type: 'ai',
+              content: content,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, aiMessage]);
+          }
+        });
+      } else if (responseData && typeof responseData === 'object') {
+        // Processar objeto único
+        const content = responseData.message || responseData.text || responseData.resposta || 
+                       responseData.content || JSON.stringify(responseData);
+        
+        if (content && content.trim().length > 0 && content !== 'undefined' && content !== 'null') {
           const aiMessage: ChatMessage = {
-            id: `${Date.now()}_${index}`,
+            id: `${Date.now()}_0`,
             type: 'ai',
-            content: item.message || item.text || JSON.stringify(item),
+            content: content,
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, aiMessage]);
-        });
+        }
+      } else if (typeof responseData === 'string' && responseData.trim().length > 0) {
+        // Resposta direta como string
+        const aiMessage: ChatMessage = {
+          id: `${Date.now()}_0`,
+          type: 'ai',
+          content: responseData,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMessage]);
       }
 
     } catch (error: any) {
