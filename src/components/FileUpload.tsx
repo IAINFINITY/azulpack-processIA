@@ -60,10 +60,10 @@ const FileUpload = ({ onFilesSelected }: FileUploadProps) => {
       {files.length > 0 && (
         <div className="space-y-2">
           {files.map((file, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg w-full">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm truncate">{file.name}</span>
+                <span className="text-sm truncate block max-w-full">{file.name}</span>
               </div>
               <Button
                 size="sm"
