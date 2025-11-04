@@ -58,23 +58,78 @@ const SummaryManager = ({ processo, onSummaryUpdated }: SummaryManagerProps) => 
       });
 
       console.log("Response status:", response.status);
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
-        throw new Error(`Erro na requisição: ${response.status}`);
+        const errorText = await response.text();
+        console.error("Erro na resposta do webhook:", errorText);
+        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json();
+      // Verificar se a resposta é JSON válido
+      const contentType = response.headers.get("content-type");
+      console.log("Content-Type da resposta:", contentType);
+      
+      // Ler o body da resposta apenas uma vez
+      const responseText = await response.text();
+      console.log("Response text (raw):", responseText);
+      
+      if (!responseText || responseText.trim().length === 0) {
+        throw new Error("Resposta do webhook está vazia");
+      }
+      
+      let data;
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError: any) {
+          console.error("Erro ao fazer parse do JSON:", parseError);
+          console.error("Texto que causou erro:", responseText);
+          throw new Error(`Resposta do webhook não é um JSON válido: ${parseError.message}`);
+        }
+      } else {
+        // Se não for JSON, usar como texto direto
+        data = responseText;
+      }
+      
       console.log("Response data:", data);
+      console.log("Response data type:", typeof data);
+      console.log("Response data is array:", Array.isArray(data));
       
       // Processar resposta - assumindo que vem no mesmo formato das mensagens
       let summaryText = "";
-      if (Array.isArray(data)) {
-        summaryText = data.map(item => item.message).join(" ");
-      } else if (data.message) {
-        summaryText = data.message;
+      
+      if (Array.isArray(data) && data.length > 0) {
+        // Processar array de respostas
+        const messages = data
+          .map(item => {
+            // Tentar diferentes campos possíveis
+            return item.message || item.text || item.resposta || item.content || 
+                   (typeof item === 'string' ? item : JSON.stringify(item));
+          })
+          .filter(msg => msg && msg.trim().length > 0 && msg !== 'undefined' && msg !== 'null');
+        
+        summaryText = messages.join(" ").trim();
+      } else if (data && typeof data === 'object') {
+        // Processar objeto único
+        summaryText = data.message || data.text || data.resposta || data.content || 
+                      data.summary || JSON.stringify(data);
+      } else if (typeof data === 'string') {
+        // Resposta direta como string
+        summaryText = data;
       } else {
-        summaryText = data.resposta || "Resumo gerado com sucesso";
+        // Tentar qualquer campo que possa conter o resumo
+        summaryText = data?.resposta || data?.message || data?.text || "";
       }
+
+      // Validar se o resumo não está vazio
+      if (!summaryText || summaryText.trim().length === 0 || 
+          summaryText === "undefined" || summaryText === "null") {
+        console.error("Resposta do webhook está vazia ou inválida:", data);
+        throw new Error("O webhook retornou uma resposta vazia ou inválida. Tente novamente.");
+      }
+
+      console.log("Resumo processado:", summaryText.substring(0, 100) + "...");
 
       // Salvar no banco
       const { error } = await supabase
