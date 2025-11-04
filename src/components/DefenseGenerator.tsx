@@ -96,21 +96,71 @@ const DefenseGenerator = ({ processo, onDefenseUpdated }: DefenseGeneratorProps)
       console.log("Response status:", response.status);
 
       if (!response.ok) {
-        throw new Error(`Erro na requisição: ${response.status}`);
+        const errorText = await response.text();
+        console.error("Erro na resposta do webhook:", errorText);
+        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json();
-      console.log("Response data:", data);
+      // Verificar se a resposta é JSON válido
+      const contentType = response.headers.get("content-type");
+      console.log("Content-Type da resposta:", contentType);
       
-      let defenseText = "";
-      if (Array.isArray(data)) {
-        defenseText = data.map(item => item.message || item.text || JSON.stringify(item)).join(" ");
-      } else if (data.message) {
-        defenseText = data.message;
-      } else if (data.text) {
-        defenseText = data.text;
+      // Ler o body da resposta apenas uma vez
+      const responseText = await response.text();
+      console.log("Response text (raw):", responseText);
+      
+      if (!responseText || responseText.trim().length === 0) {
+        throw new Error("Resposta do webhook está vazia");
+      }
+      
+      let data;
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError: any) {
+          console.error("Erro ao fazer parse do JSON:", parseError);
+          console.error("Texto que causou erro:", responseText);
+          throw new Error(`Resposta do webhook não é um JSON válido: ${parseError.message}`);
+        }
       } else {
-        defenseText = data.resposta || "Sugestão de abordagem gerada com sucesso";
+        // Se não for JSON, usar como texto direto
+        data = responseText;
+      }
+      
+      console.log("Response data:", data);
+      console.log("Response data type:", typeof data);
+      console.log("Response data is array:", Array.isArray(data));
+      
+      // Processar resposta - assumindo que vem no mesmo formato das mensagens
+      let defenseText = "";
+      
+      if (Array.isArray(data) && data.length > 0) {
+        // Processar array de respostas
+        const messages = data
+          .map(item => {
+            // Tentar diferentes campos possíveis
+            return item.message || item.text || item.resposta || item.content || 
+                   (typeof item === 'string' ? item : JSON.stringify(item));
+          })
+          .filter(msg => msg && msg.trim().length > 0 && msg !== 'undefined' && msg !== 'null');
+        
+        defenseText = messages.join(" ").trim();
+      } else if (data && typeof data === 'object') {
+        // Processar objeto único
+        defenseText = data.message || data.text || data.resposta || data.content || 
+                     JSON.stringify(data);
+      } else if (typeof data === 'string') {
+        // Resposta direta como string
+        defenseText = data;
+      } else {
+        // Tentar qualquer campo que possa conter a defesa
+        defenseText = data?.resposta || data?.message || data?.text || "";
+      }
+
+      // Validar se a defesa não está vazia
+      if (!defenseText || defenseText.trim().length === 0 || 
+          defenseText === "undefined" || defenseText === "null") {
+        throw new Error("A resposta do webhook não contém conteúdo válido");
       }
 
       // Salvar no histórico antes de atualizar
