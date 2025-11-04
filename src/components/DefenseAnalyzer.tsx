@@ -281,13 +281,13 @@ const DefenseAnalyzer = ({ processo }: DefenseAnalyzerProps) => {
       </Card>
 
       {/* Modal de Histórico de Análises */}
-      {showHistory && (
-        <DefenseAnalysisHistory
-          processo={processo}
-          analysisHistory={analysisHistory}
-          onAnalysisSelected={setCurrentAnalysis}
-        />
-      )}
+      <DefenseAnalysisHistory
+        processo={processo}
+        analysisHistory={analysisHistory}
+        onAnalysisSelected={setCurrentAnalysis}
+        open={showHistory}
+        onOpenChange={setShowHistory}
+      />
     </div>
   );
 };

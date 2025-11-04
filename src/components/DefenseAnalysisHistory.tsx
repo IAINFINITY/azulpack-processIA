@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,14 +13,17 @@ interface DefenseAnalysisHistoryProps {
   processo: Processo;
   analysisHistory: DefenseAnalysisItem[];
   onAnalysisSelected: (analysis: string) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const DefenseAnalysisHistory = ({ 
   processo, 
   analysisHistory, 
-  onAnalysisSelected 
+  onAnalysisSelected,
+  open = true,
+  onOpenChange
 }: DefenseAnalysisHistoryProps) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState<DefenseAnalysisItem | null>(null);
 
   // Função para renderizar negrito entre **texto**
@@ -42,11 +44,13 @@ const DefenseAnalysisHistory = ({
 
   const handleSelectAnalysis = (analysis: DefenseAnalysisItem) => {
     onAnalysisSelected(analysis.conteudo_analise);
-    setIsOpen(false);
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
