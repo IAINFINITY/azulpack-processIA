@@ -98,6 +98,26 @@ const CreateProcessDialog = ({ onProcessCreated, processo, open, onOpenChange }:
         if (error) throw error;
         processoId = newProc.id;
         resultProcesso = newProc;
+
+        // Disparar webhook informando dados do processo criado
+        try {
+          const webhookPayload = {
+            action: "createProcess",
+            process_id: newProc.id?.toString?.() ?? String(newProc.id),
+            titulo: newProc.titulo,
+            numero_processo: newProc.numero_processo,
+            status: newProc.status,
+            user: user.id,
+          };
+
+          await fetch('https://webhookauto.iainfinity.com.br/webhook/azulpack_chat_ia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(webhookPayload),
+          }).catch(() => {});
+        } catch (_) {
+          // Ignorar erro do webhook para não bloquear a criação
+        }
       }
       // Upload de arquivos (igual antes)
       if (selectedFiles.length > 0 && processoId) {
