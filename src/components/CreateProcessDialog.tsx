@@ -128,11 +128,11 @@ const CreateProcessDialog = ({ onProcessCreated, processo, open, onOpenChange }:
             title: isEdit ? "Processo atualizado com sucesso!" : "Processo criado com sucesso!",
             description: "O processo e os arquivos foram processados com sucesso.",
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error("Erro ao fazer upload dos arquivos:", error);
           toast({
             title: "Atenção",
-            description: !!processo ? "O processo foi atualizado, mas houve um erro ao processar alguns arquivos." : "O processo foi criado, mas houve um erro ao processar alguns arquivos.",
+            description: isEdit ? "O processo foi atualizado, mas houve um erro ao processar alguns arquivos." : "O processo foi criado, mas houve um erro ao processar alguns arquivos.",
             variant: "destructive",
           });
         } finally {
@@ -140,19 +140,19 @@ const CreateProcessDialog = ({ onProcessCreated, processo, open, onOpenChange }:
         }
       } else {
         toast({
-          title: !!processo ? "Processo atualizado com sucesso!" : "Processo criado com sucesso!",
-          description: !!processo ? "O processo foi atualizado." : "O novo processo foi adicionado à lista.",
+          title: isEdit ? "Processo atualizado com sucesso!" : "Processo criado com sucesso!",
+          description: isEdit ? "O processo foi atualizado." : "O novo processo foi adicionado à lista.",
         });
       }
       setFormData({ titulo: "", numero_processo: "", descricao: "", arquivos_url: [], status: "andamento" });
       setSelectedFiles([]);
       setOpen(false);
       onProcessCreated();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(isEdit ? "Erro ao atualizar processo:" : "Erro ao criar processo:", error);
       toast({
         title: isEdit ? "Erro ao atualizar processo" : "Erro ao criar processo",
-        description: error.message || "Tente novamente em alguns instantes.",
+        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
     } finally {
