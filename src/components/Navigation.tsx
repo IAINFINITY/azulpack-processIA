@@ -86,12 +86,17 @@ const Navigation = ({ centerSlot }: NavigationProps) => {
 
   const handleSignOut = async () => {
     try {
+      console.log('Iniciando logout...');
       await signOut();
+      console.log('Logout bem sucedido');
       toast({
         title: "Logout realizado com sucesso!",
         description: "Até logo!"
       });
+      // Forçar redirecionamento para home após logout
+      window.location.href = '/';
     } catch (error) {
+      console.error('Erro ao fazer logout:', error);
       toast({
         title: "Erro no logout",
         description: "Tente novamente.",

@@ -105,7 +105,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      // Registrar logout no audit log antes de deslogar
+      if (user) {
+        await logAuditEvent('LOGOUT', 'SYSTEM');
+      }
+      
+      // Fazer logout do Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Erro ao deslogar do Supabase:', error);
+        throw error;
+      }
+      
+      // Limpar estado local
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      
+    } catch (error) {
+      console.error('Erro no processo de logout:', error);
+      throw error;
+    }
   };
 
   const isAdmin = userProfile?.role === 'ADMIN';
