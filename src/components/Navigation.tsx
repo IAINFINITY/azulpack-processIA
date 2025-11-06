@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, Scale, User, ArrowLeft } from "lucide-react";
+import { LogOut, Scale, User, ArrowLeft, Shield, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 interface NavigationProps {
@@ -19,7 +20,8 @@ interface NavigationProps {
 const Navigation = ({ centerSlot }: NavigationProps) => {
   const {
     user,
-    signOut
+    signOut,
+    isAdmin
   } = useAuth();
   const {
     toast
@@ -138,6 +140,23 @@ const Navigation = ({ centerSlot }: NavigationProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {isAdmin && (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard" className="flex items-center">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Dashboard Admin
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/users" className="flex items-center">
+                        <Users className="h-4 w-4 mr-2" />
+                        Gerenciar Usuários
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair

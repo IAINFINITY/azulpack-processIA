@@ -7,6 +7,7 @@ import CreateProcessDialog from "@/components/CreateProcessDialog";
 import { FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { LayoutGrid, List as ListIcon } from "lucide-react";
 
@@ -14,6 +15,7 @@ const ProcessList = ({ search = "" }) => {
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user, logAuditEvent } = useAuth();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>("grid");
 
   const loadProcessos = async () => {
@@ -27,6 +29,11 @@ const ProcessList = ({ search = "" }) => {
       if (error) throw error;
       
       setProcessos(data || []);
+      
+      // Registrar acesso aos processos
+      if (user) {
+        await logAuditEvent('VIEW_PROCESS', 'PROCESS');
+      }
     } catch (error: any) {
       console.error("Erro ao carregar processos:", error);
       toast({

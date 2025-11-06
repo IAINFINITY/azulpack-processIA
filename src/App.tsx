@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import EditarSenha from "./pages/EditarSenha";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserManagement from "./pages/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,16 @@ const App = () => {
               <Route path="/chat/:sessionId" element={
                 <ProtectedRoute>
                   <ChatPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/dashboard" element={
+                <ProtectedRoute adminOnly>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/users" element={
+                <ProtectedRoute adminOnly>
+                  <UserManagement />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

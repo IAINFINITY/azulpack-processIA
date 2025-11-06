@@ -13,6 +13,27 @@ export interface Processo {
   status?: string;
 }
 
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  role: 'ADMIN' | 'USER';
+  nome: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuditLog {
+  id: number;
+  user_id: string;
+  action_type: 'LOGIN' | 'CREATE_PROCESS' | 'EDIT_PROCESS' | 'VIEW_PROCESS' | 'DELETE_PROCESS' | 'CREATE_USER' | 'EDIT_USER' | 'DELETE_USER';
+  resource_type: 'PROCESS' | 'USER' | 'SYSTEM';
+  resource_id?: string;
+  details?: any;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string;
+}
+
 export interface ChatSession {
   id: number;
   user_uuid: string;

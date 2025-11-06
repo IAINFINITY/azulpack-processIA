@@ -10,11 +10,13 @@ import DefenseManager from "@/components/DefenseManager";
 import SummaryManager from "@/components/SummaryManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProcessDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isAdmin, logAuditEvent } = useAuth();
   const [processo, setProcesso] = useState<Processo | null>(null);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +56,11 @@ const ProcessDetails = () => {
       }
       
       setProcesso(data);
+      
+      // Registrar acesso ao processo
+      if (user) {
+        await logAuditEvent('VIEW_PROCESS', 'PROCESS', data.id);
+      }
     } catch (error: any) {
       console.error("Erro ao carregar processo:", error);
       toast({

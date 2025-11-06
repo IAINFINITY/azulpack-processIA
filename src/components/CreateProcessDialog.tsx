@@ -31,7 +31,7 @@ const CreateProcessDialog = ({ onProcessCreated, processo, open, onOpenChange }:
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, logAuditEvent } = useAuth();
 
   // Use controlled or uncontrolled state based on props
   const isControlled = open !== undefined && onOpenChange !== undefined;
@@ -81,6 +81,9 @@ const CreateProcessDialog = ({ onProcessCreated, processo, open, onOpenChange }:
           })
           .eq('id', processoId);
         if (error) throw error;
+        
+        // Registrar log de edição
+        await logAuditEvent('UPDATE_PROCESS', 'PROCESS', processoId);
       } else {
         // Criar novo processo
         const { data: newProc, error } = await supabase
@@ -98,6 +101,9 @@ const CreateProcessDialog = ({ onProcessCreated, processo, open, onOpenChange }:
         if (error) throw error;
         processoId = newProc.id;
         resultProcesso = newProc;
+        
+        // Registrar log de criação
+        await logAuditEvent('CREATE_PROCESS', 'PROCESS', processoId);
 
         // Disparar webhook informando dados do processo criado
         try {
